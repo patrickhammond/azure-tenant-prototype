@@ -1,0 +1,15 @@
+# Copy to backend.hcl (git-ignored) and fill in with the values bootstrap.sh prints.
+#
+#     tofu init -backend-config=backend.hcl
+#
+# These complete the partial backend block in backend.tf. Every value below is a placeholder —
+# nothing real is ever committed to this repository (AGENTS.md).
+
+resource_group_name  = "rg-platform-tfstate-eus"
+storage_account_name = "stplatformtfstateEXAMPLE"
+subscription_id      = "00000000-0000-0000-0000-000000000000"
+
+# Deliberately no tenant_id. With Entra auth the backend resolves the tenant from the signed-in
+# CLI session, and setting both is rejected outright:
+#   AzureCLICredential: ERROR: Please specify only one of subscription and tenant, not both
+# The provider (terraform.tfvars) does take a tenant_id — only the backend must not.

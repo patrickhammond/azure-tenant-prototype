@@ -1,0 +1,16 @@
+# Copy to terraform.tfvars (git-ignored) and fill in with the values bootstrap.sh prints.
+#
+# Every value below is a placeholder. Nothing real is ever committed to this repository
+# (AGENTS.md). See variables.tf for what each one is for.
+
+tenant_id                = "00000000-0000-0000-0000-000000000000"
+platform_subscription_id = "00000000-0000-0000-0000-000000000000"
+
+location = "eastus"
+
+state_storage_account_name = "stplatformtfstateEXAMPLE"
+state_key_vault_name       = "kv-plat-tfstate-EXAMPL"
+state_key_vault_uri        = "https://kv-plat-tfstate-EXAMPL.vault.azure.net"
+
+# state_key_name and application_environments have defaults in variables.tf; override only if you
+# are running this against a different set of applications.

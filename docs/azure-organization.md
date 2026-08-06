@@ -81,7 +81,7 @@ The platform exists first; the dependency between platform and applications is r
 | Log Analytics workspaces                            | Its managed identity and role assignments     |
 | SQL logical server + each app's **empty** database  | Its DNS record                                |
 | The DNS zone (`example.com`)                        | Its alerts                                     |
-| OpenTofu state storage account                      | Its database schema and migrations (`D7`)     |
+| OpenTofu state storage account and encryption key   | Its database schema and migrations (`D7`)     |
 | Access-reconciliation job + `app-standard` module   |                                               |
 | Each app's GitHub identities and federated creds    |                                               |
 
@@ -89,7 +89,22 @@ The platform exists first; the dependency between platform and applications is r
   and an apply identity should not be able to grant itself more permission. An app's apply identity
   therefore never needs write access to the shared resource group.
 - The **state storage account is a genuine bootstrap**: it cannot be created by the OpenTofu that
-  stores its state in it. Create it once, by hand or a short script, before anything else.
+  stores its state in it. Create it once, by hand or a short script, before anything else. The same
+  script creates the **Key Vault and key-encryption key** that state encryption depends on — `D8`
+  requires `enforced = true`, so OpenTofu cannot write its first byte of state without a key to wrap
+  it with. Those four resources — resource group, storage account, state container, vault and key —
+  are the *whole* manual surface; everything else is code.
 
-**Start-up sequence:** state storage account → platform pipeline → onboard an application
-(`docs/building-an-application.md`) → that application's pipeline can run.
+- A **fresh subscription registers almost no resource providers**, and the failure is mislabelled:
+  creating a storage account under an unregistered `Microsoft.Storage` returns
+  **`SubscriptionNotFound`**, pointing at the one thing that is fine. Register the providers first.
+- **Creating a resource does not grant its data plane.** Owner on the subscription confers no blob
+  or Key Vault data access; the operator's data-plane roles must be assigned *before* the first
+  container or key is created, not after.
+- **Role assignments at the Tenant Root Group take minutes to take effect.** A 403 immediately
+  after granting a role is usually propagation, not the wrong role — but verify which by checking
+  whether the role actually carries the action, since the two look identical.
+
+**Start-up sequence:** resource providers → state storage account and encryption key → platform
+pipeline → onboard an application (`docs/building-an-application.md`) → that application's pipeline
+can run.

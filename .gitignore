@@ -1,0 +1,24 @@
+# Backend and variable files carry real tenant, subscription, and resource names. This repository
+# is published (AGENTS.md) — they never get committed. The *.example files are the committed
+# placeholders.
+backend.hcl
+*.auto.tfvars
+terraform.tfvars
+
+# OpenTofu working directories and local state. Remote state is the only state (D8).
+# .terraform.lock.hcl is deliberately NOT ignored — the provider lock is committed so every run
+# resolves the same provider builds (P4).
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+
+# Saved plans. These are encrypted, but there is no reason for one to be in the repo.
+*.tfplan
+
+# Local-only developer credentials (D2 — permitted only for values that work on one machine).
+.env
+.env.*
+!.env.example
+
+.DS_Store

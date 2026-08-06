@@ -44,7 +44,7 @@ M0 Platform foundation ─┬─> M1 Lemon dev (walking skeleton) ─> M2 Delive
 The shared substrate. Until this exists, no app can be deployed. Owned by the platform, lives in
 `platform/`. ADRs: `D1`, `D2`, `D3`, `D5`, `D8`; topology in `docs/azure-organization.md`.
 
-- [ ] **P-01 · Bootstrap & remote state.** The one-time chicken-and-egg step: create the state storage
+- [x] **P-01 · Bootstrap & remote state.** The one-time chicken-and-egg step: create the state storage
       account/container and the management-group hierarchy, then bring `platform/` OpenTofu under its
       own remote state. Document the manual bootstrap in `platform/README.md`.
       *Done when:* `tofu init && tofu plan` for `platform/` runs against remote state with zero drift.
