@@ -49,6 +49,27 @@ these mappings consistently and never reintroduce the originals:
 Before committing, grep the diff for leaked real names. When unsure whether a name is generic enough,
 make it more generic.
 
+### Working conventions
+
+Learned while building this repo; they hold for every agent and every change.
+
+- **Verify; don't assert.** A claim that was never exercised is worse than an open checkbox — this
+  is a reference implementation, and readers will trust what it says. If a check is unsafe as
+  written, find a safe way to actually run it (a throwaway resource group, a probe key, a scratch
+  container) rather than skipping it. Never close a task on a weakened test; if the test had to
+  change, record what changed and why in the task itself. Leaving one item visibly unverified beats
+  closing it falsely.
+- **Infrastructure-mutating commands are gated, by design.** Provisioning, deleting, granting roles,
+  and removing locks are refused to the agent. Don't retry them, and don't reissue the underlying
+  API calls piecemeal to get around the refusal. Hand the human the exact command and say what a
+  successful result looks like, then carry on with everything that isn't blocked.
+- **Check capability claims before designing around them.** "This tool has no X" is the assertion
+  most likely to be confidently wrong and cheapest to verify. Consult current docs before an absence
+  becomes a design decision — one such claim in this repo's history sent an entire encryption design
+  down the wrong path.
+- **Facts about the system belong in `docs/`, not in an agent's memory.** If building something
+  reveals the playbook is wrong or silent, fix `docs/` in the same change.
+
 ### OpenSpec
 
 Non-trivial changes are spec-driven via **OpenSpec**. Use the installed `/opsx:*` commands and
