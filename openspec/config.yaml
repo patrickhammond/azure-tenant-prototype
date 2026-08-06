@@ -1,0 +1,22 @@
+schema: spec-driven
+
+context: |
+  Public, de-identified reference implementation of an internal-application platform on Azure.
+  Two example applications (Lemon, Lime) x two environments (dev, prod) on a shared platform,
+  in one monorepo. See AGENTS.md for repo conventions.
+
+  Design authority: docs/ (architecture decision records D1-D17, principles P0-P10). Read the
+  relevant record before proposing a change near it; if this and docs/ disagree, docs/ wins.
+
+  Tech: OpenTofu (azurerm) for all infrastructure; Azure Container Apps + Azure SQL; GitHub Actions
+  with OIDC workload-identity federation (no stored credentials); Entra OIDC for user auth. Deploy
+  by image digest; promotion to prod re-applies the same digest, never a rebuild.
+
+  Public repo: no real client, company, person, tenant, DNS name, or subscription ID. Placeholders
+  only (org, example.com, zero-GUIDs). Grep the diff for leaked names before committing.
+
+rules:
+  proposal:
+    - A change touching access, data classification, alerting, or dependencies must update the
+      affected application's docs/operations.md in the same change (D13).
+    - Keep the design de-identified; never introduce a real client, tenant, person, or subscription.
