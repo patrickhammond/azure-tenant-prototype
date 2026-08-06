@@ -19,6 +19,10 @@ second application would otherwise copy it; until then, building it out is work 
 
 ## The access-reconciliation job (why one, and its safety property)
 
+For how this job bridges group-of-truth to per-app authorization on the free tier, see
+[`../entra-free-and-per-app-rbac.md`](../entra-free-and-per-app-rbac.md).
+
+
 Entra ID Free cannot assign a group to an app role, so a single platform job reads the membership of
 the Entra security groups named in its configuration and the app-role assignments currently on each
 application's service principal, computes the difference, and adds/removes assignments to match. It

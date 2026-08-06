@@ -10,6 +10,8 @@ person, or subscription ID.
   resource-group layout, naming, and the platform bootstrap / ownership split.
 - [`building-an-application.md`](building-an-application.md) — the new-application checklist and
   go-live gates.
+- [`entra-free-and-per-app-rbac.md`](entra-free-and-per-app-rbac.md) — appendix: how per-application
+  RBAC works on Entra ID Free (ties `D1` and `D3` together).
 
 Appendices and the source playbook's client-specific migration state are intentionally omitted;
 implementation notes are written as the implementations land.

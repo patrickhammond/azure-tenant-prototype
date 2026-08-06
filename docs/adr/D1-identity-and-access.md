@@ -8,7 +8,9 @@ Control plane and data plane are separate systems; never conflate them. The tena
 Free**, deliberately (see the operating constraint in the ADR index). Assigning a security group to
 an app role requires Entra ID P1, which we do not hold, so we assign users individually and reconcile
 from groups by a platform job (`D3`). Assigning a group to an Azure RBAC role needs no paid tier, so
-the control-plane rules below are unaffected.
+the control-plane rules below are unaffected. How these pieces combine into per-application RBAC
+without P1 is walked through in
+[`../entra-free-and-per-app-rbac.md`](../entra-free-and-per-app-rbac.md).
 
 ## Required — control plane
 

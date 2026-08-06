@@ -39,3 +39,6 @@ around what that tier cannot do. The workarounds are the design, not a temporary
 Assigning an Entra security group to an **Azure RBAC** role is **free**. The P1 requirement applies
 to enterprise applications and Entra directory roles, not Azure resource RBAC — so control-plane
 access (`D1`) is unaffected; only application authorization has to bend.
+
+How the bend still yields per-application RBAC — without paying for P1 — is walked through end to end
+in [`../entra-free-and-per-app-rbac.md`](../entra-free-and-per-app-rbac.md).
