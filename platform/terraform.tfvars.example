@@ -21,5 +21,6 @@ state_key_vault_uri        = "https://kv-plat-tfstate-EXAMPL.vault.azure.net"
 active_environments            = ["dev"]
 vended_application_environments = ["lemon-dev"]
 
-github_repository = "example-org/example-repo"
+# From: gh api repos/OWNER/REPO/actions/oidc/customization/sub --jq .sub_claim_prefix
+github_repository = "example-org@000000/example-repo@0000000000"
 alert_email       = "platform@example.com"

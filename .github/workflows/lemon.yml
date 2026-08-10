@@ -54,15 +54,18 @@ jobs:
         with:
           tofu_version: 1.12.5
 
-      # ARM_* on Init too: the backend authenticates separately from the provider.
+      # ARM_* on Init too: the backend authenticates separately from the provider. The state
+      # encryption block (D8) is also evaluated at init, so its inputs belong here — without them
+      # OpenTofu prompts on stdin and the job hangs until it times out rather than failing.
       - name: Init
         env:
           ARM_USE_OIDC: "true"
           ARM_CLIENT_ID: ${{ secrets.AZURE_DEPLOY_CLIENT_ID }}
           ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          TF_VAR_state_key_vault_uri: ${{ secrets.STATE_KEY_VAULT_URI }}
         run: |
-          tofu init -no-color \
+          tofu init -no-color -input=false \
             -backend-config="resource_group_name=${{ secrets.STATE_RESOURCE_GROUP }}" \
             -backend-config="storage_account_name=${{ secrets.STATE_STORAGE_ACCOUNT }}" \
             -backend-config="subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}"
@@ -79,7 +82,7 @@ jobs:
           TF_VAR_tenant_id: ${{ secrets.AZURE_TENANT_ID }}
           TF_VAR_state_key_vault_uri: ${{ secrets.STATE_KEY_VAULT_URI }}
           TF_VAR_container_image: ${{ vars.LEMON_IMAGE_DIGEST }}
-        run: tofu plan -no-color -out=tfplan
+        run: tofu plan -no-color -input=false -out=tfplan
 
       # The saved plan is encrypted (D8), so apply needs the key provider's inputs too.
       - name: Apply
@@ -89,4 +92,4 @@ jobs:
           ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           TF_VAR_state_key_vault_uri: ${{ secrets.STATE_KEY_VAULT_URI }}
-        run: tofu apply -no-color tfplan
+        run: tofu apply -no-color -input=false tfplan

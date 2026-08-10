@@ -229,6 +229,13 @@ time and none is discoverable from the documentation you would naturally read fi
   matches.** A deny policy conditioned on it silently does nothing; the same rule without that clause
   denies correctly. Anything built on that field needs testing before it is trusted.
 
+- **GitHub's OIDC subject claim is not `repo:owner/repo:...`.** It qualifies both with numeric IDs —
+  `repo:owner@424944/repo@1329211848:environment:dev` — so the claim survives a rename. A federated
+  credential built from the plain names is refused with `AADSTS700213: No matching federated identity
+  record found`, which reads like a permissions problem rather than a string mismatch. Read the real
+  prefix instead of assembling it:
+  `gh api repos/OWNER/REPO/actions/oidc/customization/sub --jq .sub_claim_prefix`.
+
 - **`DevTest` workload is refused** on an Individual MCA (`InvalidSku`).
 
 - **A saved plan file does not carry `-parallelism`.** The flag lives on the `apply` invocation, so

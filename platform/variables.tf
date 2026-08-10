@@ -80,15 +80,20 @@ variable "vended_application_environments" {
 
 variable "github_repository" {
   description = <<-EOT
-    The GitHub repository deploy identities federate to, as `owner/repo`. Used to build the federated
-    credential subject; a wrong value here means the workflow cannot assume the identity, which is the
-    correct failure direction.
+    The repository portion of the OIDC subject claim GitHub actually presents. NOT simply
+    `owner/repo`: GitHub qualifies both with numeric IDs so the claim survives a rename, e.g.
+    `owner@424944/repo@1329211848`. A credential built from the plain names is refused with
+    AADSTS700213, which reads like a permissions problem rather than a string mismatch.
+
+    Read the real value rather than assembling it:
+      gh api repos/OWNER/REPO/actions/oidc/customization/sub --jq .sub_claim_prefix
+    and drop the leading `repo:`.
   EOT
   type        = string
 
   validation {
     condition     = can(regex("^[^/]+/[^/]+$", var.github_repository))
-    error_message = "github_repository must be owner/repo."
+    error_message = "github_repository must be owner[@id]/repo[@id]."
   }
 }
 
