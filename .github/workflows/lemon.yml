@@ -54,15 +54,20 @@ jobs:
         with:
           tofu_version: 1.12.5
 
-      # ARM_* on Init too: the backend authenticates separately from the provider. The state
-      # encryption block (D8) is also evaluated at init, so its inputs belong here — without them
-      # OpenTofu prompts on stdin and the job hangs until it times out rather than failing.
+      # ARM_* on Init too: the backend authenticates separately from the provider, and the state
+      # encryption block (D8) is evaluated at init, so its inputs belong here — without them OpenTofu
+      # prompts on stdin and the job hangs until it times out rather than failing.
+      #
+      # ARM_SUBSCRIPTION_ID is deliberately absent from every step. Key Vault is a data-plane
+      # operation needing only a tenant, but the SDK passes the subscription too and the credential
+      # rejects both: "Please specify only one of subscription and tenant, not both"
+      # (opentofu/opentofu#3520, upstream). The subscription reaches the provider through
+      # TF_VAR_subscription_id and the backend through -backend-config instead.
       - name: Init
         env:
           ARM_USE_OIDC: "true"
           ARM_CLIENT_ID: ${{ secrets.AZURE_DEPLOY_CLIENT_ID }}
           ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           TF_VAR_state_key_vault_uri: ${{ secrets.STATE_KEY_VAULT_URI }}
         run: |
           tofu init -no-color -input=false \
@@ -77,7 +82,6 @@ jobs:
           ARM_USE_OIDC: "true"
           ARM_CLIENT_ID: ${{ secrets.AZURE_DEPLOY_CLIENT_ID }}
           ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           TF_VAR_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           TF_VAR_tenant_id: ${{ secrets.AZURE_TENANT_ID }}
           TF_VAR_state_key_vault_uri: ${{ secrets.STATE_KEY_VAULT_URI }}
@@ -90,6 +94,5 @@ jobs:
           ARM_USE_OIDC: "true"
           ARM_CLIENT_ID: ${{ secrets.AZURE_DEPLOY_CLIENT_ID }}
           ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           TF_VAR_state_key_vault_uri: ${{ secrets.STATE_KEY_VAULT_URI }}
         run: tofu apply -no-color -input=false tfplan

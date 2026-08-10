@@ -236,6 +236,13 @@ time and none is discoverable from the documentation you would naturally read fi
   prefix instead of assembling it:
   `gh api repos/OWNER/REPO/actions/oidc/customization/sub --jq .sub_claim_prefix`.
 
+- **`ARM_SUBSCRIPTION_ID` in the environment breaks state encryption.** The `azure_vault` key
+  provider is a data-plane call needing only a tenant, but the SDK forwards the subscription as well
+  and the credential refuses both: `Please specify only one of subscription and tenant, not both`
+  (opentofu/opentofu#3520, upstream). Pass the subscription through the provider block and
+  `-backend-config`, never the environment. `backend.hcl.example` records the same error for the
+  backend's `tenant_id` — same root cause, opposite field.
+
 - **`DevTest` workload is refused** on an Individual MCA (`InvalidSku`).
 
 - **A saved plan file does not carry `-parallelism`.** The flag lives on the `apply` invocation, so
