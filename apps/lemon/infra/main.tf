@@ -9,13 +9,26 @@ locals {
   shared_resource_group = "rg-${local.application_environment}-shared"
   web_resource_group    = "rg-${local.application_environment}-web"
   platform_shared_group = "rg-platform-${var.environment}-shared"
+
+  # Deliberately duplicated from platform/locals.tf, and must match it: an application cannot read
+  # platform state, so shared names have to be reconstructed from the convention. An unknown region
+  # fails here rather than producing a name that silently resolves to nothing.
+  location_short_map = {
+    eastus    = "eus"
+    eastus2   = "eus2"
+    centralus = "cus"
+    westus2   = "wus2"
+    westus3   = "wus3"
+  }
+
+  location_short = local.location_short_map[var.location]
 }
 
 data "azurerm_client_config" "current" {}
 
 # Read of a platform-owned resource, permitted by the join role's read action.
 data "azurerm_container_app_environment" "shared" {
-  name                = "cae-platform-${var.environment}-eus"
+  name                = "cae-platform-${var.environment}-${local.location_short}"
   resource_group_name = local.platform_shared_group
 }
 
@@ -28,7 +41,7 @@ data "azurerm_user_assigned_identity" "runtime" {
 # Data, in the shared group so the compute group stays safe to rebuild.
 
 resource "azurerm_mssql_server" "application" {
-  name                = "sql-${local.application_environment}-eus"
+  name                = "sql-${local.application_environment}-${local.location_short}"
   resource_group_name = local.shared_resource_group
   location            = var.location
   version             = "12.0"

@@ -14,20 +14,20 @@
 
 import {
   to = azurerm_resource_group.tfstate
-  id = "/subscriptions/${var.platform_subscription_id}/resourceGroups/rg-platform-tfstate-${local.location_short}"
+  id = "/subscriptions/${var.platform_subscription_id}/resourceGroups/rg-platform-tfstate-${local.state_location_short}"
 }
 
 import {
   to = azurerm_storage_account.tfstate
-  id = "/subscriptions/${var.platform_subscription_id}/resourceGroups/rg-platform-tfstate-${local.location_short}/providers/Microsoft.Storage/storageAccounts/${var.state_storage_account_name}"
+  id = "/subscriptions/${var.platform_subscription_id}/resourceGroups/rg-platform-tfstate-${local.state_location_short}/providers/Microsoft.Storage/storageAccounts/${var.state_storage_account_name}"
 }
 
 import {
   to = azurerm_storage_container.platform
-  id = "/subscriptions/${var.platform_subscription_id}/resourceGroups/rg-platform-tfstate-${local.location_short}/providers/Microsoft.Storage/storageAccounts/${var.state_storage_account_name}/blobServices/default/containers/tfstate-platform"
+  id = "/subscriptions/${var.platform_subscription_id}/resourceGroups/rg-platform-tfstate-${local.state_location_short}/providers/Microsoft.Storage/storageAccounts/${var.state_storage_account_name}/blobServices/default/containers/tfstate-platform"
 }
 
 import {
   to = azurerm_key_vault.tfstate
-  id = "/subscriptions/${var.platform_subscription_id}/resourceGroups/rg-platform-tfstate-${local.location_short}/providers/Microsoft.KeyVault/vaults/${var.state_key_vault_name}"
+  id = "/subscriptions/${var.platform_subscription_id}/resourceGroups/rg-platform-tfstate-${local.state_location_short}/providers/Microsoft.KeyVault/vaults/${var.state_key_vault_name}"
 }

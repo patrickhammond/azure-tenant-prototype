@@ -14,9 +14,15 @@ variable "tenant_id" {
 }
 
 variable "location" {
-  description = "Azure region. One region for the whole platform."
+  description = <<-EOT
+    Azure region. Must match the platform's var.location — this root reconstructs shared resource
+    names from it, so a mismatch resolves to resources that do not exist.
+
+    Not eastus: SQL provisioning is restricted there on this subscription, and the restriction is
+    only visible via `az sql db list-editions -l <region> --available`.
+  EOT
   type        = string
-  default     = "eastus"
+  default     = "centralus"
 }
 
 variable "application" {

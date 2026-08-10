@@ -5,8 +5,8 @@
 # what the script applied, or the first plan is not clean.
 
 resource "azurerm_resource_group" "tfstate" {
-  name     = "rg-platform-tfstate-${local.location_short}"
-  location = var.location
+  name     = "rg-platform-tfstate-${local.state_location_short}"
+  location = var.state_location
   tags     = local.tags
 }
 

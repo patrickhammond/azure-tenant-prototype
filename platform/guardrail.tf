@@ -105,10 +105,6 @@ resource "azurerm_subscription_policy_assignment" "deny_subscription_scoped_priv
 
   description = "Removing this assignment is itself an alerted event. See azurerm_monitor_activity_log_alert.guardrail_tampered."
 
-  # Application groups ONLY. rg-platform-<env>-shared holds every application's runtime identity and
-  # Key Vault; exempting it would open the group the self-escalation argument depends on, and nothing
-  # the platform does there needs a privileged role. Applications cannot widen this list — they
-  # cannot create resource groups.
   # APPLICATION groups only. `rg-platform-<env>-shared` is not exempt: it holds every
   # application's runtime identity and Key Vault, and the self-escalation argument in vending.tf
   # depends on applications having no write there. Nothing the platform does in that group needs a
@@ -122,9 +118,23 @@ resource "azurerm_subscription_policy_assignment" "deny_subscription_scoped_priv
 # Tamper detection. A subscription Owner can delete the policy assignment; that deletion is alerted.
 # --------------------------------------------------------------------------------------------
 
+# Its own group, not an environment's. Everything below is scoped to the SUBSCRIPTION, so hanging it
+# off the shared plane of whichever environment happened to be listed first coupled subscription-wide
+# alerting to one environment's lifecycle — a region move for that environment would have deleted the
+# guardrail's alerting as collateral, with no plan entry saying so.
+resource "azurerm_resource_group" "guardrail" {
+  name     = "rg-platform-guardrail-${local.location_short}"
+  location = var.location
+
+  tags = {
+    purpose    = "subscription-guardrail"
+    managed-by = "platform"
+  }
+}
+
 resource "azurerm_monitor_action_group" "platform" {
   name                = "ag-platform-guardrail"
-  resource_group_name = azurerm_resource_group.environment_shared[var.active_environments[0]].name
+  resource_group_name = azurerm_resource_group.guardrail.name
   short_name          = "guardrail"
 
   email_receiver {
@@ -135,7 +145,7 @@ resource "azurerm_monitor_action_group" "platform" {
 
 resource "azurerm_monitor_activity_log_alert" "guardrail_tampered" {
   name                = "alert-guardrail-tampered"
-  resource_group_name = azurerm_resource_group.environment_shared[var.active_environments[0]].name
+  resource_group_name = azurerm_resource_group.guardrail.name
   location            = "global"
   scopes              = [local.subscription_scope]
 
@@ -149,6 +159,7 @@ resource "azurerm_monitor_activity_log_alert" "guardrail_tampered" {
   action {
     action_group_id = azurerm_monitor_action_group.platform.id
   }
+
 }
 
 # Fires on every role assignment in the subscription, not only subscription-scoped ones — the
@@ -156,7 +167,7 @@ resource "azurerm_monitor_activity_log_alert" "guardrail_tampered" {
 # grant made after someone deletes the policy.
 resource "azurerm_monitor_activity_log_alert" "role_assignment_written" {
   name                = "alert-role-assignment-written"
-  resource_group_name = azurerm_resource_group.environment_shared[var.active_environments[0]].name
+  resource_group_name = azurerm_resource_group.guardrail.name
   location            = "global"
   scopes              = [local.subscription_scope]
 
@@ -177,11 +188,12 @@ resource "azurerm_monitor_activity_log_alert" "role_assignment_written" {
   action {
     action_group_id = azurerm_monitor_action_group.platform.id
   }
+
 }
 
 resource "azurerm_monitor_activity_log_alert" "guardrail_exempted" {
   name                = "alert-guardrail-exempted"
-  resource_group_name = azurerm_resource_group.environment_shared[var.active_environments[0]].name
+  resource_group_name = azurerm_resource_group.guardrail.name
   location            = "global"
   scopes              = [local.subscription_scope]
 
@@ -195,4 +207,5 @@ resource "azurerm_monitor_activity_log_alert" "guardrail_exempted" {
   action {
     action_group_id = azurerm_monitor_action_group.platform.id
   }
+
 }

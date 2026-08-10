@@ -129,7 +129,12 @@ resource "azurerm_key_vault" "application" {
 
   # Key Vault names are globally unique and capped at 24 characters. The suffix is derived rather
   # than random so the name is stable across rebuilds without needing a random provider.
-  name                = substr("kv-${each.key}-${substr(sha1(var.platform_subscription_id), 0, 6)}", 0, 24)
+  #
+  # The region is part of the name because a vault is purge-protected: moving one region means
+  # destroy-and-create, and the destroyed vault holds its name globally for the whole soft-delete
+  # retention with no way to purge early. Without the region in the name, a vault collides with its
+  # own predecessor and the move is blocked for 30 days.
+  name                = substr("kv-${each.key}-${local.location_short}-${substr(sha1(var.platform_subscription_id), 0, 6)}", 0, 24)
   resource_group_name = azurerm_resource_group.environment_shared[local.vended_components["${each.key}-web"].environment].name
   location            = var.location
   tenant_id           = var.tenant_id
@@ -176,6 +181,22 @@ resource "azurerm_role_assignment" "deploy_identity_operator" {
 
   scope                = azurerm_user_assigned_identity.runtime[each.key].id
   role_definition_name = "Managed Identity Operator"
+  principal_id         = azurerm_user_assigned_identity.deploy[each.key].principal_id
+}
+
+# Read and write its own OpenTofu state, scoped to its own CONTAINER. This is the grant state.tf's
+# one-container-per-application-environment layout exists to make possible: at account scope a dev
+# pipeline could read and rewrite prod state, which is P6 broken one layer below the resource groups.
+#
+# Data-plane only. The account has shared_access_key_enabled = false, so this Entra grant is the only
+# way in — there is no account key to fall back on.
+resource "azurerm_role_assignment" "deploy_state_container" {
+  for_each = local.vended
+
+  # `id`, not `resource_manager_id`: since the container is declared with storage_account_id, `id`
+  # is already the resource-manager form, and resource_manager_id is deprecated for removal in 5.0.
+  scope                = azurerm_storage_container.application[each.key].id
+  role_definition_name = "Storage Blob Data Contributor"
   principal_id         = azurerm_user_assigned_identity.deploy[each.key].principal_id
 }
 

@@ -25,7 +25,27 @@ variable "platform_subscription_id" {
 }
 
 variable "location" {
-  description = "Azure region for platform resources. One region for the whole platform."
+  description = <<-EOT
+    Azure region for everything an application touches: its resource groups, the shared plane, its
+    Key Vault, its database. One region, so no application traffic crosses one.
+
+    Not every region can host every service on every subscription. Azure restricts SQL provisioning
+    per region per subscription, and the restriction is invisible until a create fails. Check before
+    choosing: `az sql db list-editions -l <region> --available` returns nothing for a blocked region.
+  EOT
+  type        = string
+}
+
+variable "state_location" {
+  description = <<-EOT
+    Region for the OpenTofu state account and its key vault, held separately from var.location.
+
+    These are the platform's own plumbing, not application infrastructure: nothing an application
+    serves is on the latency path to them, and they are the most expensive resources here to move —
+    the group carries a CanNotDelete lock, the vault is purge-protected, and relocating the key
+    means re-encrypting every state file. Pinning the region separately means a region change for
+    the applications does not propose moving them.
+  EOT
   type        = string
 }
 

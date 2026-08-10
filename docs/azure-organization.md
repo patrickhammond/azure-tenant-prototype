@@ -99,12 +99,18 @@ express is expressed by resource groups and the roles scoped to them.
 
 ## Inside the subscription
 
-Resource groups carry the separation the subscription used to. Three kinds:
+Resource groups carry the separation the subscription used to. Four kinds:
 
 ```
 sub-platform  (the only subscription)
 │
 ├── rg-platform-tfstate-eus      state account, Key Vault, key-encryption key
+│                                Pinned to its own region (var.state_location), so moving the
+│                                applications never proposes moving state
+│
+├── rg-platform-guardrail-cus    subscription-scoped guardrail alerting: action group and the
+│                                three activity log alerts. Its own group because it belongs to
+│                                the subscription, not to any one environment
 │
 ├── rg-platform-dev-shared       PLATFORM-OWNED, per environment:
 │                                Container Apps environment, Log Analytics workspace,
@@ -242,6 +248,30 @@ time and none is discoverable from the documentation you would naturally read fi
   (opentofu/opentofu#3520, upstream). Pass the subscription through the provider block and
   `-backend-config`, never the environment. `backend.hcl.example` records the same error for the
   backend's `tenant_id` — same root cause, opposite field.
+
+- **Creating a state container grants nobody access to it.** Storage data access is a separate
+  RBAC plane from the control plane that creates the container, so a deploy identity holding
+  Contributor on its resource groups still gets `AuthorizationPermissionMismatch` at `tofu init`. It
+  needs `Storage Blob Data Contributor` scoped to its own container — and with
+  `shared_access_key_enabled = false` there is no account key to fall back on. The same split
+  applies to Key Vault: `Key Vault Secrets User` and `Secrets Officer` carry data actions only, so an
+  identity that can read every secret in a vault still cannot resolve that vault through a
+  `data "azurerm_key_vault"` block.
+
+- **A region can be closed to a service for your subscription, invisibly.** `eastus`, `eastus2`, and
+  `northcentralus` all refuse SQL provisioning on this subscription with `ProvisioningDisabled`,
+  discovered only when a create failed. `az sql db list-editions -l <region>` cheerfully lists
+  editions for a blocked region; adding **`--available`** makes the query subscription-scoped and
+  returns nothing. Check the region before building on it, not after.
+
+- **A region move does not plan for resources whose only tie to a region is their parent group.**
+  Activity log alerts and action groups are `location = "global"` with no region in their names, so
+  moving an environment planned their resource group for replacement and *no action at all* for
+  them — Azure deletes them with the group while state still says they exist. Here that would have
+  silently removed the guardrail's own tamper detection. `replace_triggered_by` cannot express the
+  dependency (it rejects a variable-indexed reference). The real fix was that subscription-scoped
+  resources should never have lived in an environment's group: they now have their own, so a region
+  change moves them by ordinary force-new on `resource_group_name`.
 
 - **`DevTest` workload is refused** on an Individual MCA (`InvalidSku`).
 

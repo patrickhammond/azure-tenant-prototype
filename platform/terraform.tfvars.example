@@ -6,7 +6,14 @@
 tenant_id                = "00000000-0000-0000-0000-000000000000"
 platform_subscription_id = "00000000-0000-0000-0000-000000000000"
 
-location = "eastus"
+# Applications and their shared plane. Not eastus/eastus2/northcentralus: SQL provisioning is
+# restricted there on this subscription. Check a candidate with
+#   az sql db list-editions -l <region> --available
+location = "centralus"
+
+# The state account and its key vault stay where bootstrap.sh put them. Held separately so moving
+# the applications does not propose moving a locked, purge-protected, state-bearing group.
+state_location = "eastus"
 
 state_storage_account_name = "stplatformtfstateexampl"
 state_key_vault_name       = "kv-plat-tfstate-EXAMPL"
