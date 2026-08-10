@@ -1,0 +1,6 @@
+# Copy to backend.hcl (git-ignored). Same shape as the platform's; see platform/backend.hcl.example
+# for why there is deliberately no tenant_id here.
+
+resource_group_name  = "rg-platform-tfstate-eus"
+storage_account_name = "stplatformtfstateexampl"
+subscription_id      = "00000000-0000-0000-0000-000000000000"

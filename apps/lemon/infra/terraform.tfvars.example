@@ -1,0 +1,11 @@
+# Copy to terraform.tfvars (git-ignored) for local runs. In CI these arrive as TF_VAR_* from the
+# workflow. Every value below is a placeholder — nothing real is committed (AGENTS.md).
+
+subscription_id = "00000000-0000-0000-0000-000000000000"
+tenant_id       = "00000000-0000-0000-0000-000000000000"
+
+# Required by the state-encryption block in versions.tf (D8).
+state_key_vault_uri = "https://kv-plat-tfstate-exampl.vault.azure.net"
+
+# Digest-pinned, never a tag (D9). The pipeline supplies the digest it built.
+container_image = "mcr.microsoft.com/k8se/quickstart@sha256:0000000000000000000000000000000000000000000000000000000000000000"

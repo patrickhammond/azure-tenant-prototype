@@ -49,10 +49,19 @@ The shared substrate. Until this exists, no app can be deployed. Owned by the pl
       own remote state. Document the manual bootstrap in `platform/README.md`.
       *Done when:* `tofu init && tofu plan` for `platform/` runs against remote state with zero drift.
       → `D8`, `azure-organization.md` (bootstrap sequence)
-- [ ] **P-02 · Subscriptions & management groups.** Codify the MG tree and the per-app-per-env
-      subscription vending as OpenTofu. *Done when:* the four app subscriptions
-      (lemon-dev/prod, lime-dev/prod) plus platform exist under the right MGs with the naming from
-      `azure-organization.md`. → `D1`, `P5`, `P6`
+- [x] ~~**P-02 · Subscriptions & management groups.**~~ **Abandoned — the premise was wrong.**
+      Subscription creation on this billing account is capped at five per account and one per 24
+      hours, so four app subscriptions plus platform is exactly the ceiling with nothing spare, and no
+      room for `D17` sandboxes or `D6`'s Restricted store. The platform now targets **one
+      subscription and no management groups**. The change is archived as superseded at
+      `openspec/changes/archive/2026-08-09-subscription-vending/`, whose proposal preserves what was
+      measured. Replaced by P-02a.
+- [ ] **P-02a · Single-subscription shape (Lemon dev slice).** Resource groups as the isolation
+      boundary inside one subscription: a platform-owned per-environment shared plane, platform-vended
+      application resource groups and identities, and a policy guardrail denying privileged role
+      assignments outside vended groups. *Done when:* Lemon dev runs end to end and the deploy identity
+      is **verifiably unable** to create a resource group, create a role assignment, or write to the
+      platform's group. → `D1`, `P5`, `P6`; change `single-subscription-lemon-dev-slice`
 - [ ] **P-03 · Shared container registry.** One ACR for all apps, with **ABAC-scoped pull**: each
       app-env identity can pull only its own repository. *Done when:* Lemon's dev identity can pull
       `lemon/*` and is denied `lime/*`. → `D3`, `D4`
@@ -64,7 +73,8 @@ The shared substrate. Until this exists, no app can be deployed. Owned by the pl
       RBAC, per [`docs/entra-free-and-per-app-rbac.md`](docs/entra-free-and-per-app-rbac.md).
       *Done when:* a user added to a role's source group appears as an app-role assignment on the next
       run, idempotently. → `D1`, `D3`
-- [ ] **P-06 · CI identity & OIDC federation.** GitHub↔Azure workload-identity federation, one apply
+- [ ] **P-06 · CI identity & OIDC federation.** *(Lemon dev delivered by P-02a; remaining: prod, Lime,
+      and the reviewer gate on prod.)* GitHub↔Azure workload-identity federation, one apply
       identity per app-env, each federated credential scoped to a **GitHub Environment**. *Done when:*
       a workflow can `az login` with no stored secret. → `D2`, `D9`
 

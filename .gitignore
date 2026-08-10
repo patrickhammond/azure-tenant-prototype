@@ -22,3 +22,13 @@ crash.log
 !.env.example
 
 .DS_Store
+
+# Personal Claude Code permission rules. Workflow preference, not part of the reference design.
+.claude/settings.local.json
+
+# Client-confidential source material. This repository is published (AGENTS.md); the real
+# playbook carries the org, subscription, domain, and resource names the de-identified docs/
+# exists to replace. Never commit it.
+*.docx
+*.doc
+*.pdf

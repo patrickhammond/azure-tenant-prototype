@@ -8,9 +8,18 @@ platform_subscription_id = "00000000-0000-0000-0000-000000000000"
 
 location = "eastus"
 
-state_storage_account_name = "stplatformtfstateEXAMPLE"
+state_storage_account_name = "stplatformtfstateexampl"
 state_key_vault_name       = "kv-plat-tfstate-EXAMPL"
 state_key_vault_uri        = "https://kv-plat-tfstate-EXAMPL.vault.azure.net"
 
+
 # state_key_name and application_environments have defaults in variables.tf; override only if you
 # are running this against a different set of applications.
+
+# Single-subscription slice (P-02 replacement). Environments and application-environments are widened
+# deliberately, not automatically — see variables.tf.
+active_environments            = ["dev"]
+vended_application_environments = ["lemon-dev"]
+
+github_repository = "example-org/example-repo"
+alert_email       = "platform@example.com"

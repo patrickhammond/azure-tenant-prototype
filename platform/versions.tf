@@ -62,7 +62,25 @@ terraform {
 }
 
 provider "azurerm" {
-  features {}
+  # PRIMARY guard against cancelling a real subscription (P-02).
+  #
+  # Destroying an azurerm_subscription otherwise CANCELS the subscription: irrecoverable after 90
+  # days, and its subscription ID can never be reused. This makes destroy drop the alias instead.
+  #
+  # It is primary, not redundant, because it is the only guard that survives the resource block
+  # being deleted. `lifecycle { prevent_destroy }` on the subscriptions is the secondary guard and
+  # was MEASURED on OpenTofu 1.12.5 to cover less than it appears to:
+  #
+  #   block present, -destroy/-replace  → plan fails         (protected)
+  #   block removed from configuration  → plans a destroy    (NOT protected)
+  #
+  # So the likeliest accident — a refactor that deletes the resource — is caught only here. Do not
+  # remove this on the grounds that prevent_destroy already covers it. It does not.
+  features {
+    subscription {
+      prevent_cancellation_on_destroy = true
+    }
+  }
 
   subscription_id = var.platform_subscription_id
   tenant_id       = var.tenant_id

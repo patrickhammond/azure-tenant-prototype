@@ -68,6 +68,56 @@ variable "state_key_name" {
   default     = "tofu-state-kek"
 }
 
+variable "vended_application_environments" {
+  description = <<-EOT
+    Application-environments the platform has vended resource groups and a deploy identity for.
+    Narrower than application_environments: vending is a change someone makes, not a side effect of
+    naming an application in a list.
+  EOT
+  type        = list(string)
+  default     = ["lemon-dev"]
+}
+
+variable "github_repository" {
+  description = <<-EOT
+    The GitHub repository deploy identities federate to, as `owner/repo`. Used to build the federated
+    credential subject; a wrong value here means the workflow cannot assume the identity, which is the
+    correct failure direction.
+  EOT
+  type        = string
+
+  validation {
+    condition     = can(regex("^[^/]+/[^/]+$", var.github_repository))
+    error_message = "github_repository must be owner/repo."
+  }
+}
+
+variable "alert_email" {
+  description = <<-EOT
+    Where guardrail-tampering alerts go. A real address, so it is supplied out of band like every
+    other real value (AGENTS.md) and never committed.
+  EOT
+  type        = string
+
+  validation {
+    condition     = can(regex("^[^@]+@[^@]+\\.[^@]+$", var.alert_email))
+    error_message = "alert_email must be an email address."
+  }
+}
+
+variable "active_environments" {
+  description = <<-EOT
+    Environments the platform has stood up a shared plane for, as opposed to those the
+    application-environment list implies. These differ on purpose: an environment costs a Container
+    Apps environment and a Log Analytics workspace, and standing one up is a change someone makes.
+
+    Widen this to add an environment. It must be a subset of the environment suffixes appearing in
+    application_environments; anything else is silently ignored.
+  EOT
+  type        = list(string)
+  default     = ["dev"]
+}
+
 variable "application_environments" {
   description = <<-EOT
     Every application-environment that gets its own OpenTofu state container. One container each,

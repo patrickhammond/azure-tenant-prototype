@@ -6,7 +6,13 @@
 
 **OpenTelemetry**, instrumented in-process via the **Azure Monitor OpenTelemetry Distro**, exporting
 to a **workspace-based Application Insights resource per application**, backed by **one Log Analytics
-workspace per subscription**. Scope: **operational telemetry only** (`P7`).
+workspace per environment**. Scope: **operational telemetry only** (`P7`).
+
+> Previously "one workspace per subscription", which was equivalent when every application-environment
+> had its own. With a single subscription that wording would put dev and prod telemetry in one
+> workspace, so the rule is restated against the boundary that still exists. Whether a second
+> workspace changes cost — the free ingestion allowance may be per workspace or per billing account —
+> is unresolved and should be settled before the prod environment is stood up.
 
 ## Required
 

@@ -10,8 +10,8 @@ answer runs out. They are numbered and stable.
 | **P2** | Access is decided by who you are, not where you connect from | There is no VPN. Network controls are a second layer, never a substitute for authorization. |
 | **P3** | No standing credentials | Managed identities and federated identity. A password in a pipeline or on a laptop is a defect. |
 | **P4** | Everything is reproducible from source | New work lands this way; existing resources follow as they are rebuilt. |
-| **P5** | Isolation is enforced by construction, not convention | Separate applications and environments never share a database, managed identity, or security group. Sensitivity tiers inside one application share a database but never a database principal (`D6`). |
-| **P6** | Access to development does not imply access to production | Different subscriptions, groups, and approval. |
+| **P5** | Isolation is enforced by construction, not convention | Separate applications and environments never share a database, database principal, managed identity, Key Vault, or security group. Sensitivity tiers inside one application share a database but never a database principal (`D6`). Scope isolation is resource-group RBAC, backed by policy that denies subscription-scoped grants — see the residual risk in `azure-organization.md`. |
+| **P6** | Access to development does not imply access to production | Different resource groups, security groups, deploy identities, and approval. Development and production never share a Container Apps environment, SQL server, database, identity, or Key Vault. |
 | **P7** | We measure for three distinct reasons and never conflate them | Telemetry answers "is it working" (`D10`), audit answers "who did what" (`D11`), product metrics answer "is this worth having" (`D15`). Each has a different owner, retention, and reader. All three are required; no application launches without the third. |
 | **P8** | Adoption is part of delivery | Deploy continuously; release deliberately. |
 | **P9** | Boring, managed, and default | Take the managed service and the documented default unless there is a specific reason not to. |

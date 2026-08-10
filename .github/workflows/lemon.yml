@@ -1,0 +1,92 @@
+# Lemon's deployment pipeline (D9). One workflow per application, triggered by its own path.
+#
+# No stored credentials (P3): federates to a managed identity via GitHub OIDC, with the credential's
+# subject scoped to the GitHub environment.
+#
+# Identifiers are SECRETS not variables — this repository is public, so its workflow logs are public,
+# and `vars` interpolate into echoed commands while `secrets` are masked.
+
+name: lemon
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/lemon/**"
+      - ".github/workflows/lemon.yml"
+  workflow_dispatch:
+
+permissions:
+  # OIDC token only. Not contents: write.
+  id-token: write
+  contents: read
+
+concurrency:
+  # Two applies against one state container is a corruption risk.
+  group: lemon-dev
+  cancel-in-progress: false
+
+jobs:
+  dev:
+    runs-on: ubuntu-latest
+
+    # The environment's deployment-branch policy is the real gate, but it lives in GitHub where this
+    # repo cannot assert it, and workflow_dispatch accepts any ref.
+    if: github.ref == 'refs/heads/main'
+
+    # Must match the federated credential's subject, or the token exchange is refused.
+    environment: dev
+
+    defaults:
+      run:
+        working-directory: apps/lemon/infra
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_DEPLOY_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - uses: opentofu/setup-opentofu@v1
+        with:
+          tofu_version: 1.12.5
+
+      # ARM_* on Init too: the backend authenticates separately from the provider.
+      - name: Init
+        env:
+          ARM_USE_OIDC: "true"
+          ARM_CLIENT_ID: ${{ secrets.AZURE_DEPLOY_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        run: |
+          tofu init -no-color \
+            -backend-config="resource_group_name=${{ secrets.STATE_RESOURCE_GROUP }}" \
+            -backend-config="storage_account_name=${{ secrets.STATE_STORAGE_ACCOUNT }}" \
+            -backend-config="subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+
+      # No registry in this slice (P-03); the digest arrives as a variable and var.container_image
+      # validates that it is a digest, not a tag.
+      - name: Plan
+        env:
+          ARM_USE_OIDC: "true"
+          ARM_CLIENT_ID: ${{ secrets.AZURE_DEPLOY_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          TF_VAR_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          TF_VAR_tenant_id: ${{ secrets.AZURE_TENANT_ID }}
+          TF_VAR_state_key_vault_uri: ${{ secrets.STATE_KEY_VAULT_URI }}
+          TF_VAR_container_image: ${{ vars.LEMON_IMAGE_DIGEST }}
+        run: tofu plan -no-color -out=tfplan
+
+      # The saved plan is encrypted (D8), so apply needs the key provider's inputs too.
+      - name: Apply
+        env:
+          ARM_USE_OIDC: "true"
+          ARM_CLIENT_ID: ${{ secrets.AZURE_DEPLOY_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          TF_VAR_state_key_vault_uri: ${{ secrets.STATE_KEY_VAULT_URI }}
+        run: tofu apply -no-color tfplan
